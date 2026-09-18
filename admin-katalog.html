@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TOBEK TOOLS — Admin Katalog Lokal</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f6f7f9;color:#172033;margin:0}.wrap{max-width:1100px;margin:40px auto;padding:0 18px}.box{background:#fff;border:1px solid #e5e8ee;border-radius:16px;padding:22px;margin:16px 0}h1{color:#101a2d}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer;background:#101a2d;color:#fff}.btn.orange{background:#f36c21}.muted{color:#687386;font-size:13px}input{padding:10px;border:1px solid #dfe3ea;border-radius:9px}.actions{display:flex;gap:10px;flex-wrap:wrap}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid #e8ebf0;padding:9px;text-align:left;white-space:nowrap}th{background:#f8f9fb}.ok{color:#3f7650;font-weight:800}.warn{color:#9a6500;font-weight:800}
+</style></head>
+<body><div class="wrap">
+<h1>TOBEK TOOLS — Admin Katalog Lokal</h1>
+<p class="muted">Alat ini berjalan di komputer kamu. Tidak ada login dan tidak mengirim data produk ke server.</p>
+<div class="box"><h3>1. Import CSV</h3><input id="file" type="file" accept=".csv,text/csv"><p class="muted">Gunakan `products_template.csv`. Jika Excel, simpan dulu sebagai CSV UTF-8.</p></div>
+<div class="box"><h3>2. Preview</h3><div id="status">Belum ada data.</div><div class="table-wrap"><table><thead><tr><th>SKU</th><th>Nama</th><th>Brand</th><th>Kategori</th><th>Eceran</th><th>Grosir</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div class="box"><h3>3. Export</h3><div class="actions"><button class="btn orange" id="export">Download products.json</button><button class="btn" id="template">Download template CSV</button></div><p class="muted">Setelah export, upload `products.json` ke root repository GitHub TOBEK TOOLS.</p></div>
+</div>
+<script>
+let data=[];
+const required=["sku","name","brand","category","retail","wholesale","status"];
+function parseCSV(t){const rows=[];let row=[],cell="",q=false;for(let i=0;i<t.length;i++){const c=t[i],n=t[i+1];if(c=='"'&&q&&n=='"'){cell+='"';i++;continue}if(c=='"'){q=!q;continue}if(c==','&&!q){row.push(cell);cell="";continue}if((c=='\\n'||c=='\\r')&&!q){if(c=='\\r'&&n=='\\n')i++;row.push(cell);if(row.some(x=>x.trim()))rows.push(row);row=[];cell="";continue}cell+=c}row.push(cell);if(row.some(x=>x.trim()))rows.push(row);const h=rows.shift().map(x=>x.trim().toLowerCase());return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,(r[i]||"").trim()])));}
+function render(){document.getElementById("status").innerHTML=`<span class="${data.length?'ok':'warn'}">${data.length} produk terbaca.</span>`;document.getElementById("rows").innerHTML=data.slice(0,200).map(p=>`<tr><td>${p.sku}</td><td>${p.name}</td><td>${p.brand}</td><td>${p.category}</td><td>${p.retail}</td><td>${p.wholesale}</td><td>${p.status}</td></tr>`).join("")}
+document.getElementById("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;const t=await f.text();const raw=parseCSV(t);data=raw.map(p=>({...p,retail:Number(String(p.retail).replace(/[^0-9.-]/g,""))||0,wholesale:Number(String(p.wholesale).replace(/[^0-9.-]/g,""))||0,featured:["1","true","ya","yes"].includes(String(p.featured).toLowerCase()),newest:["1","true","ya","yes"].includes(String(p.newest).toLowerCase()),image:p.image||"",description:p.description||""}));render()};
+document.getElementById("export").onclick=()=>{if(!data.length)return alert("Import CSV dulu.");const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="products.json";a.click();URL.revokeObjectURL(a.href)};
+document.getElementById("template").onclick=()=>{const head="sku,name,brand,category,retail,wholesale,status,featured,newest,image,description\\n";const blob=new Blob([head],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="products_template.csv";a.click();URL.revokeObjectURL(a.href)};
+</script></body></html>

@@ -1,25 +1,119 @@
-const categories=['Perkakas Tangan','Perkakas Listrik','Peralatan Bengkel','Peralatan Bangunan','Golok & Arit','Kapak & Gergaji','Pertanian & Outdoor','Produk lainnya'];
-const brands=['GOLO','Makita','DeWALT','Bosch','Milwaukee','Krisbow'];
-const products=[
- {id:1,brand:'GOLO',name:'Golok Professional Series',sku:'TBK-DEMO-001',price:185000,wholesale:165000,tags:['best']},
- {id:2,brand:'Makita',name:'Cordless Drill Driver 18V',sku:'TBK-DEMO-002',price:1295000,wholesale:1195000,tags:['best','new']},
- {id:3,brand:'DeWALT',name:'Circular Saw Professional',sku:'TBK-DEMO-003',price:2350000,wholesale:2195000,tags:['new']},
- {id:4,brand:'Bosch',name:'Angle Grinder Professional',sku:'TBK-DEMO-004',price:975000,wholesale:895000,tags:['best']},
- {id:5,brand:'GOLO',name:'Arit Premium',sku:'TBK-DEMO-005',price:145000,wholesale:129000,tags:['new']},
- {id:6,brand:'Milwaukee',name:'Impact Driver M18',sku:'TBK-DEMO-006',price:2895000,wholesale:2695000,tags:['best']},
- {id:7,brand:'Bosch',name:'Gergaji Tangan Heavy Duty',sku:'TBK-DEMO-007',price:225000,wholesale:199000,tags:['new']},
- {id:8,brand:'DeWALT',name:'Set Mata Bor Industrial',sku:'TBK-DEMO-008',price:625000,wholesale:575000,tags:['best']}
+const state={products:[],filter:"all",query:"",category:"all",brand:"all"};
+
+const categories=[
+ ["01","Perkakas Tangan","Hand tools untuk pekerjaan harian."],
+ ["02","Perkakas Listrik","Power tools dan perlengkapannya."],
+ ["03","Peralatan Bengkel","Kebutuhan bengkel dan servis."],
+ ["04","Peralatan Bangunan","Peralatan untuk pekerjaan konstruksi."],
+ ["05","Golok & Arit","Perkakas potong untuk berbagai kebutuhan."],
+ ["06","Kapak & Gergaji","Perkakas potong dan pemotong material."],
+ ["07","Pertanian & Outdoor","Perkakas pertanian dan kegiatan luar ruang."],
+ ["08","Produk Lainnya","Produk pendukung kebutuhan umum."]
 ];
-let cart=[];
-const rupiah=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
-function renderCategories(){document.querySelector('#categoryGrid').innerHTML=categories.map((x,i)=>`<a class="category" href="#produk"><span>0${i+1}</span><h3>${x}</h3></a>`).join('')}
-function renderBrands(){document.querySelector('#brandGrid').innerHTML=brands.map(x=>`<a class="brand-tile" href="#produk">${x}</a>`).join('')}
-function renderProducts(filter='all'){const list=filter==='all'?products:products.filter(p=>p.tags.includes(filter));document.querySelector('#productGrid').innerHTML=list.map(p=>`<article class="product"><div class="product-img"><span class="badge">${p.tags.includes('best')?'BEST SELLER':'FEATURED'}</span></div><div class="product-info"><div class="product-brand">${p.brand}</div><h3>${p.name}</h3><div class="sku">SKU ${p.sku}</div><div class="price">${rupiah(p.price)}</div><div class="wholesale">Grosir mulai 4 pcs • ${rupiah(p.wholesale)}/pcs</div><div class="available">● Tersedia</div><div class="product-actions"><button class="add" onclick="addToCart(${p.id})">🛒 Masukkan</button><button onclick="alert('Detail produk demo: '+${JSON.stringify(p.name)})">Detail</button></div></div></article>`).join('')}
-function addToCart(id){const p=products.find(x=>x.id===id);cart.push(p);document.querySelector('#cartCount').textContent=cart.length;renderCart()}
-function renderCart(){const el=document.querySelector('#cartItems');if(!cart.length){el.innerHTML='<p class="muted">Keranjang masih kosong.</p>';document.querySelector('#cartTotal').textContent='Rp0';return}el.innerHTML=cart.map((p,i)=>`<div class="cart-row"><div><b>${p.name}</b><div class="muted">${rupiah(p.price)}</div></div><button onclick="cart.splice(${i},1);document.querySelector('#cartCount').textContent=cart.length;renderCart()">×</button></div>`).join('');document.querySelector('#cartTotal').textContent=rupiah(cart.reduce((s,p)=>s+p.price,0))}
-function open(id){document.querySelector(id).classList.add('open')};function close(id){document.querySelector(id).classList.remove('open')}
-document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProducts(b.dataset.filter)}));
-document.querySelector('#cartBtn').onclick=()=>open('#cartDrawer');document.querySelector('#closeCart').onclick=()=>close('#cartDrawer');document.querySelector('#searchBtn').onclick=()=>open('#searchModal');document.querySelector('#closeSearch').onclick=()=>close('#searchModal');
-const chatWidget=document.querySelector('#chatWidget');document.querySelector('#chatBtn').onclick=()=>{chatWidget.classList.add('open');chatWidget.setAttribute('aria-hidden','false')};document.querySelector('#closeChat').onclick=()=>{chatWidget.classList.remove('open');chatWidget.setAttribute('aria-hidden','true')};
-document.querySelector('#searchInput').addEventListener('input',e=>{const q=e.target.value.toLowerCase();const hits=products.filter(p=>`${p.name} ${p.brand} ${p.sku}`.toLowerCase().includes(q));document.querySelector('#searchResults').innerHTML=q?hits.map(p=>`<div class="search-result"><b>${p.name}</b><div class="muted">${p.brand} • ${p.sku} • ${rupiah(p.price)}</div></div>`).join(''):'<p class="muted">Ketik nama produk, brand, SKU, atau spesifikasi.</p>'});
-document.querySelector('#year').textContent=new Date().getFullYear();renderCategories();renderBrands();renderProducts();renderCart();
+
+const fallbackProducts=[
+ {sku:"DEMO-001",name:"Palu Serbaguna 16 Oz",brand:"TOBEK",category:"Perkakas Tangan",retail:75000,wholesale:68000,status:"Tersedia",featured:true,newest:true,description:"Contoh produk katalog. Ganti dengan data produk asli melalui products.json."},
+ {sku:"DEMO-002",name:"Tang Kombinasi 8 Inch",brand:"TOBEK",category:"Perkakas Tangan",retail:50000,wholesale:45000,status:"Tersedia",featured:true},
+ {sku:"DEMO-003",name:"Bor Tangan 13 mm",brand:"TOBEK",category:"Perkakas Listrik",retail:425000,wholesale:395000,status:"Tersedia",newest:true},
+ {sku:"DEMO-004",name:"Gergaji Tangan 20 Inch",brand:"TOBEK",category:"Kapak & Gergaji",retail:95000,wholesale:85000,status:"Tersedia"},
+ {sku:"DEMO-005",name:"Arit Serbaguna",brand:"TOBEK",category:"Golok & Arit",retail:85000,wholesale:76000,status:"Tersedia",featured:true},
+ {sku:"DEMO-006",name:"Kapak Fiberglass",brand:"TOBEK",category:"Kapak & Gergaji",retail:180000,wholesale:165000,status:"Tersedia"},
+ {sku:"DEMO-007",name:"Set Kunci Sok",brand:"TOBEK",category:"Peralatan Bengkel",retail:320000,wholesale:295000,status:"Tersedia",newest:true},
+ {sku:"DEMO-008",name:"Cangkul Serbaguna",brand:"TOBEK",category:"Perkakas Pertanian & Outdoor",retail:110000,wholesale:99000,status:"Tersedia"}
+];
+
+function rupiah(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function renderCategories(){
+ const el=document.getElementById("categoryGrid");
+ el.innerHTML=categories.map(([no,name,desc])=>`<button class="category-card" data-cat="${esc(name)}"><span class="category-no">${no}</span><h3>${esc(name)}</h3><p>${esc(desc)}</p></button>`).join("");
+ el.querySelectorAll(".category-card").forEach(b=>b.onclick=()=>{document.getElementById("categoryFilter").value=b.dataset.cat;state.category=b.dataset.cat;renderProducts();document.getElementById("produk").scrollIntoView({behavior:"smooth"})});
+}
+
+function populateFilters(){
+ const cats=[...new Set(state.products.map(p=>p.category).filter(Boolean))].sort();
+ const brands=[...new Set(state.products.map(p=>p.brand).filter(Boolean))].sort();
+ document.getElementById("categoryFilter").innerHTML='<option value="all">Semua kategori</option>'+cats.map(x=>`<option>${esc(x)}</option>`).join("");
+ document.getElementById("brandFilter").innerHTML='<option value="all">Semua brand</option>'+brands.map(x=>`<option>${esc(x)}</option>`).join("");
+}
+
+function matches(p){
+ const q=state.query.toLowerCase();
+ const text=[p.name,p.sku,p.brand,p.category,p.description].join(" ").toLowerCase();
+ if(q && !text.includes(q))return false;
+ if(state.category!=="all"&&p.category!==state.category)return false;
+ if(state.brand!=="all"&&p.brand!==state.brand)return false;
+ if(state.filter==="best"&&!p.featured)return false;
+ if(state.filter==="new"&&!p.newest)return false;
+ return true;
+}
+
+function productCard(p){
+ const photo=p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">`:`<span>PRODUCT PHOTO</span>`;
+ return `<article class="product-card">
+   <div class="product-photo">${photo}</div>
+   <div class="product-info">
+    <div class="product-brand">${esc(p.brand||"TOBEK")}</div>
+    <div class="product-name">${esc(p.name)}</div>
+    <div class="product-sku">SKU: ${esc(p.sku)}</div>
+    ${p.retail?`<div class="product-price">${rupiah(p.retail)}</div>`:""}
+    <div class="product-status">${esc(p.status||"Tersedia")}</div>
+    <div class="product-actions"><button class="small-btn" data-detail="${esc(p.sku)}">Detail</button><a class="small-btn primary-small wa-link" data-wa="${esc(p.name)}" href="#" target="_blank" rel="noopener">Tanya</a></div>
+   </div>
+ </article>`;
+}
+
+function renderProducts(){
+ const visible=state.products.filter(matches);
+ const grid=document.getElementById("productGrid"), empty=document.getElementById("emptyState");
+ grid.innerHTML=visible.map(productCard).join("");
+ empty.hidden=visible.length>0;
+ grid.querySelectorAll("[data-detail]").forEach(b=>b.onclick=()=>openProduct(b.dataset.detail));
+ grid.querySelectorAll(".wa-link").forEach(a=>a.href=waUrl(`Halo TOBEK TOOLS, saya ingin menanyakan produk: ${a.dataset.wa}`));
+}
+
+function waUrl(message){const number=window.TOBEK_WHATSAPP||"6280000000000";return `https://wa.me/${number}?text=${encodeURIComponent(message)}`}
+
+function openProduct(sku){
+ const p=state.products.find(x=>x.sku===sku);if(!p)return;
+ const photo=p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:`<span>PRODUCT PHOTO</span>`;
+ document.getElementById("productDetailContent").innerHTML=`<div class="detail-grid"><div class="detail-photo">${photo}</div><div class="detail-content"><div class="product-brand">${esc(p.brand||"TOBEK")}</div><h2>${esc(p.name)}</h2><div class="detail-meta">SKU ${esc(p.sku)} · ${esc(p.category||"")}</div>${p.retail?`<div class="detail-price">${rupiah(p.retail)}</div>`:""}<p class="detail-desc">${esc(p.description||"Informasi produk tersedia di TOBEK TOOLS. Hubungi kami untuk spesifikasi dan ketersediaan terbaru.")}</p><a class="btn primary" href="${waUrl(`Halo TOBEK TOOLS, saya ingin informasi tentang ${p.name} (SKU ${p.sku}).`)}" target="_blank" rel="noopener">Tanya Produk</a></div></div>`;
+ document.getElementById("productModal").classList.add("open");
+}
+
+function openSearch(){
+ const modal=document.getElementById("searchModal");modal.classList.add("open");
+ const input=document.getElementById("searchInput");input.focus();input.value="";
+ renderSearchResults("");
+ input.oninput=()=>renderSearchResults(input.value);
+}
+function renderSearchResults(q){
+ const results=state.products.filter(p=>[p.name,p.sku,p.brand,p.category].join(" ").toLowerCase().includes(q.toLowerCase())).slice(0,12);
+ document.getElementById("searchResults").innerHTML=results.map(p=>`<div class="search-result" data-sku="${esc(p.sku)}"><strong>${esc(p.name)}</strong><small>${esc(p.brand)} · ${esc(p.sku)} · ${esc(p.category)}</small></div>`).join("")||`<div class="empty-state">Tidak ada hasil.</div>`;
+ document.querySelectorAll(".search-result").forEach(x=>x.onclick=()=>{document.getElementById("searchModal").classList.remove("open");openProduct(x.dataset.sku)});
+}
+
+async function loadProducts(){
+ try{
+  const r=await fetch("products.json",{cache:"no-store"});
+  if(!r.ok)throw new Error();
+  const data=await r.json();
+  state.products=Array.isArray(data)?data:fallbackProducts;
+ }catch(e){state.products=fallbackProducts}
+ renderCategories();populateFilters();renderProducts();
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+ document.getElementById("year").textContent=new Date().getFullYear();
+ document.getElementById("searchBtn").onclick=openSearch;
+ document.getElementById("closeSearch").onclick=()=>document.getElementById("searchModal").classList.remove("open");
+ document.getElementById("closeProduct").onclick=()=>document.getElementById("productModal").classList.remove("open");
+ document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
+ document.getElementById("catalogSearch").oninput=e=>{state.query=e.target.value;renderProducts()};
+ document.getElementById("categoryFilter").onchange=e=>{state.category=e.target.value;renderProducts()};
+ document.getElementById("brandFilter").onchange=e=>{state.brand=e.target.value;renderProducts()};
+ document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{document.querySelectorAll(".filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;renderProducts()});
+ const links=["headerContact","promoContact","contactBtn"];links.forEach(id=>document.getElementById(id).href=waUrl("Halo TOBEK TOOLS, saya ingin informasi produk."));
+ loadProducts();
+});

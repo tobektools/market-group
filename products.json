@@ -1,0 +1,41 @@
+[
+  {
+    "sku": "DEMO-001",
+    "name": "Palu Serbaguna 16 Oz",
+    "brand": "TOBEK",
+    "category": "Perkakas Tangan",
+    "retail": 75000,
+    "wholesale": 68000,
+    "status": "Tersedia",
+    "featured": true,
+    "newest": true,
+    "image": "",
+    "description": "Contoh produk katalog."
+  },
+  {
+    "sku": "DEMO-002",
+    "name": "Tang Kombinasi 8 Inch",
+    "brand": "TOBEK",
+    "category": "Perkakas Tangan",
+    "retail": 50000,
+    "wholesale": 45000,
+    "status": "Tersedia",
+    "featured": true,
+    "newest": false,
+    "image": "",
+    "description": "Contoh produk katalog."
+  },
+  {
+    "sku": "DEMO-003",
+    "name": "Bor Tangan 13 mm",
+    "brand": "TOBEK",
+    "category": "Perkakas Listrik",
+    "retail": 425000,
+    "wholesale": 395000,
+    "status": "Tersedia",
+    "featured": false,
+    "newest": true,
+    "image": "",
+    "description": "Contoh produk katalog."
+  }
+]
